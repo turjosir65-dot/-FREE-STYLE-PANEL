@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Sensi & Live Device Info</title>
+    <style>
+        body {
+            background-color: #080808;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background-color: #121212;
+            border: 2px solid #00FF41;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.25);
+            position: relative;
+        }
+        .header {
+            background: linear-gradient(90deg, #00FF41, #00cc33);
+            color: #000000;
+            padding: 12px 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            letter-spacing: 1px;
+        }
+        .body-content {
+            display: flex;
+            padding: 14px;
+        }
+        .sidebar {
+            width: 110px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sidebar button {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            text-align: left;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: 0.2s;
+        }
+        .sidebar button.active, .sidebar button:hover {
+            background-color: #00FF41;
+            color: #000000;
+            font-weight: bold;
+        }
+        .main-panel {
+            flex: 1;
+            padding-left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .title {
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #00FF41;
+            margin-bottom: 2px;
+        }
+        .panel-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .input-box input, .input-box select {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            color: #ffffff;
+            padding: 7px;
+            border-radius: 6px;
+            font-size: 11px;
+            outline: none;
+        }
+        .input-box input:focus, .input-box select:focus {
+            border-color: #00FF41;
+        }
+        .input-box button {
+            background-color: #00FF41;
+            color: #000000;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+        .card {
+            background-color: #1a1a1a;
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid #00FF41;
+        }
+        .result-box {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .btn-go {
+            background-color: #00FF41;
+            color: #000000;
+            border: none;
+            padding: 9px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 2px;
+            font-size: 11px;
+        }
+        .admin-text {
+            text-align: center;
+            font-size: 10px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .admin-text span {
+            color: #00FF41;
+            font-weight: bold;
+        }
+
+        /* সুন্দর ও প্রিমিয়াম লগইন ওভারলে ডিজাইন */
+        #loginOverlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(12, 12, 12, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 290px;
+            background: linear-gradient(145deg, #161616, #101010);
+            border: 2px solid #00FF41;
+            padding: 22px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.35);
+        }
+        .login-header {
+            text-align: center;
+            color: #00FF41;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-bottom: 1px dashed #222;
+            padding-bottom: 8px;
+        }
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1c1c1c;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            border: 1px solid #282828;
+        }
+        /* Toggle Switch CSS */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input { 
+            opacity: 0; width: 0; height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .3s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #00FF41;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        .login-hidden-group {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-card input {
+            background-color: #0a0a0a;
+            border: 1px solid #333;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            outline: none;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .login-card input:focus {
+            border-color: #00FF41;
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+        }
+        .login-card button {
+            background: linear-gradient(90deg, #00FF41, #00cc33);
+            color: #000000;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+        .login-card button:hover {
+            opacity: 0.9;
+        }
+        .login-footer {
+            text-align: center;
+            font-size: 9px;
+            color: #777;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- প্রিমিয়াম লগইন স্ক্রিন উইথ ভয়েস অ্যালার্ট টগল সুইচ -->
+        <div id="loginOverlay">
+            <div class="login-card">
+                <div class="login-header">SECURITY ACCESS</div>
+                
+                <div class="toggle-row">
+                    <span>Enable Access</span>
+                    <label class="switch">
+                        <input type="checkbox" id="loginToggle" onchange="toggleLoginInputs()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="login-hidden-group" id="loginFields">
+                    <input type="password" id="loginPass" placeholder="Enter Password">
+                    <button type="button" onclick="checkLogin()">LOGIN NOW</button>
+                </div>
+
+                <div class="login-footer">Protected by @ TURJO X USER</div>
+            </div>
+        </div>
+
+        <div class="header">
+            <span>FREESTYLE PRO</span>
+            <span>⚡</span>
+        </div>
+
+        <div class="body-content">
+            <div class="sidebar">
+                <button class="active" id="btnSensi" onclick="switchTab('sensi')">Auto Sensi</button>
+                <button id="btnLive" onclick="switchTab('live')">Device Info</button>
+                <button onclick="window.open('https://t.me/turji', '_blank')">Telegram</button>
+            </div>
+
+            <div class="main-panel">
+                
+                <!-- ১. অটো সেন্সি সেকশন -->
+                <div id="sensiPanel" class="panel-section">
+                    <div class="title">DEVICE & RAM SETUP</div>
+                    <div class="input-box" id="inputSection">
+                        <input type="text" id="phoneName" placeholder="Phone Name (e.g. Redmi)">
+                        <input type="text" id="phoneModel" placeholder="Model (e.g. Note 10)">
+                        <select id="phoneRam">
+                            <option value="" disabled selected>Select RAM</option>
+                            <option value="3">3 GB RAM</option>
+                            <option value="4">4 GB RAM</option>
+                            <option value="6">6 GB RAM</option>
+                            <option value="8">8 GB RAM</option>
+                            <option value="12">12 GB RAM</option>
+                        </select>
+                        <button type="button" onclick="generateUniqueSensi()">GENERATE</button>
+                    </div>
+                    
+                    <div class="result-box" id="resultBox">
+                        <div class="card">
+                            <span>General Sensi</span>
+                            <span id="genVal" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                        <div class="card">
+                            <span>Red Dot</span>
+                            <span id="redVal" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                        <div class="card">
+                            <span>2X Scope</span>
+                            <span id="twoVal" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                        <div class="card">
+                            <span>4X Scope</span>
+                            <span id="fourVal" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                        <div class="card">
+                            <span>Desert Eagle 🦅</span>
+                            <span id="deagleVal" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                        <div class="card">
+                            <span>M1887 Shotgun 🎯</span>
+                            <span id="m1887Val" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                        <div class="card">
+                            <span>Spas-12 Shotgun 💥</span>
+                            <span id="spasVal" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                        <div class="card">
+                            <span>Fire Button</span>
+                            <span id="fireVal" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                        <div class="card">
+                            <span>DPI</span>
+                            <span id="dpiVal" style="color: #00FF41; font-weight: bold;">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ২. লগইন করা ডিভাইসের রিয়েল-টাইম লাইভ ইনফো সেকশন -->
+                <div id="livePanel" class="panel-section hidden">
+                    <div class="title">CONNECTED DEVICE DETAILS</div>
+                    <div class="card">
+                        <span>Device Brand</span>
+                        <span id="liveBrand" style="color: #00FF41; font-weight: bold;">Detecting...</span>
+                    </div>
+                    <div class="card">
+                        <span>System / Model Info</span>
+                        <span id="liveSystem" style="color: #00FF41; font-weight: bold; font-size: 9px;">Detecting...</span>
+                    </div>
+                    <div class="card">
+                        <span>Screen Resolution</span>
+                        <span id="liveScreen" style="color: #00FF41; font-weight: bold;">--</span>
+                    </div>
+                    <div class="card">
+                        <span>CPU Cores</span>
+                        <span id="liveCpu" style="color: #00FF41; font-weight: bold;">--</span>
+                    </div>
+                    <div class="card">
+                        <span>Network Status</span>
+                        <span id="liveNet" style="color: #00FF41; font-weight: bold;">--</span>
+                    </div>
+                    <div class="card">
+                        <span>Battery Status</span>
+                        <span id="liveBattery" style="color: #00FF41; font-weight: bold;">Loading...</span>
+                    </div>
+                </div>
+
+                <button class="btn-go" onclick="window.open('https://t.me/turji', '_blank')">JOIN TELEGRAM ↗</button>
+                <div class="admin-text">Admin: <span>@ TURJO X USER</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ভয়েস স্পিচ ফাংশন
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                let utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function toggleLoginInputs() {
+            let toggle = document.getElementById('loginToggle');
+            let fields = document.getElementById('loginFields');
+            if (toggle.checked) {
+                fields.style.display = "flex";
+                speakText("Access Enabled");
+            } else {
+                fields.style.display = "none";
+                document.getElementById('loginPass').value = "";
+                speakText("Access Disabled");
+            }
+        }
+
+        function checkLogin() {
+            let pass = document.getElementById('loginPass').value;
+            if (pass === "TURJO X USER") {
+                speakText("Login Successful");
+                document.getElementById('loginOverlay').style.display = 'none';
+            } else {
+                speakText("Incorrect Password");
+                alert("ভুল পাসওয়ার্ড! সঠিক পাসওয়ার্ড দিন।");
+            }
+        }
+
+        function switchTab(tab) {
+            let sensiPanel = document.getElementById('sensiPanel');
+            let livePanel = document.getElementById('livePanel');
+            let btnSensi = document.getElementById('btnSensi');
+            let btnLive = document.getElementById('btnLive');
+
+            if (!sensiPanel || !livePanel) return;
+
+            if (tab === 'sensi') {
+                sensiPanel.classList.remove('hidden');
+                livePanel.classList.add('hidden');
+                if(btnSensi) btnSensi.classList.add('active');
+                if(btnLive) btnLive.classList.remove('active');
+            } else {
+                sensiPanel.classList.add('hidden');
+                livePanel.classList.remove('hidden');
+                if(btnLive) btnLive.classList.add('active');
+                if(btnSensi) btnSensi.classList.remove('active');
+                loadDeviceDetails();
+            }
+        }
+
+        function generateUniqueSensi() {
+            let nameField = document.getElementById('phoneName');
+            let modelField = document.getElementById('phoneModel');
+            let ramField = document.getElementById('phoneRam');
+
+            if (!nameField || !modelField || !ramField) return;
+
+            let name = nameField.value.trim();
+            let model = modelField.value.trim();
+            let ram = ramField.value;
+
+            if (name === "" || model === "" || ram === "") {
+                alert("দয়া করে ফোনের নাম, মডেল এবং র‍্যাম সিলেক্ট করুন!");
+                return;
+            }
+
+            let combinedString = (name + model + ram).toLowerCase();
+            let hash = 0;
+            for (let i = 0; i < combinedString.length; i++) {
+                hash = combinedString.charCodeAt(i) + ((hash << 5) - hash);
+            }
+
+            let gen = 140 + (Math.abs(hash) % 40);
+            let red = 130 + (Math.abs(hash >> 1) % 40);
+            let two = 120 + (Math.abs(hash >> 2) % 40);
+            let four = 115 + (Math.abs(hash >> 3) % 40);
+            let deagle = 125 + (Math.abs(hash >> 4) % 40);
+            let m1887 = 135 + (Math.abs(hash >> 5) % 45);
+            let spas = 115 + (Math.abs(hash >> 6) % 40);
+            let fire = 40 + (Math.abs(hash >> 7) % 16);
+            let dpi = 510 + (Math.abs(hash >> 8) % 131);
+
+            let setVal = (id, val) => {
+                let el = document.getElementById(id);
+                if(el) el.innerText = val;
+            };
+
+            setVal('genVal', gen);
+            setVal('redVal', red);
+            setVal('twoVal', two);
+            setVal('fourVal', four);
+            setVal('deagleVal', deagle);
+            setVal('m1887Val', m1887);
+            setVal('spasVal', spas);
+            setVal('fireVal', fire + "%");
+            setVal('dpiVal', dpi);
+
+            let resBox = document.getElementById('resultBox');
+            if(resBox) resBox.style.display = "flex";
+        }
+
+        function loadDeviceDetails() {
+            let ua = navigator.userAgent;
+
+            let brand = "Android / Mobile Device";
+            if (ua.indexOf("Samsung") !== -1 || ua.indexOf("SM-") !== -1) brand = "Samsung Galaxy";
+            else if (ua.indexOf("Xiaomi") !== -1 || ua.indexOf("Redmi") !== -1 || ua.indexOf("POCO") !== -1) brand = "Xiaomi / Redmi / Poco";
+            else if (ua.indexOf("OPPO") !== -1) brand = "OPPO";
+            else if (ua.indexOf("vivo") !== -1) brand = "Vivo";
+            else if (ua.indexOf("Realme") !== -1) brand = "Realme";
+            else if (ua.indexOf("OnePlus") !== -1) brand = "OnePlus";
+            else if (ua.indexOf("iPhone") !== -1) brand = "Apple iPhone";
+            else if (ua.indexOf("Windows") !== -1) brand = "Windows PC";
+            
+            let brandEl = document.getElementById('liveBrand');
+            if(brandEl) brandEl.innerText = brand;
+
+            let systemInfo = "Standard Web Client";
+            let match = ua.match(/\(([^)]+)\)/);
+            if (match && match[1]) {
+                systemInfo = match[1];
+            }
+            let systemEl = document.getElementById('liveSystem');
+            if(systemEl) systemEl.innerText = systemInfo;
+
+            let screenEl = document.getElementById('liveScreen');
+            if(screenEl) screenEl.innerText = window.screen.width + " x " + window.screen.height;
+
+            let cores = navigator.hardwareConcurrency ? navigator.hardwareConcurrency + " Cores" : "Not Available";
+            let cpuEl = document.getElementById('liveCpu');
+            if(cpuEl) cpuEl.innerText = cores;
+
+            let netStatus = navigator.onLine ? "Online 🟢" : "Offline 🔴";
+            let netEl = document.getElementById('liveNet');
+            if(netEl) netEl.innerText = netStatus;
+
+            let batteryEl = document.getElementById('liveBattery');
+            if(batteryEl) {
+                if ('getBattery' in navigator) {
+                    navigator.getBattery().then(function(battery) {
+                        let level = Math.round(battery.level * 100) + "%";
+                        let charging = battery.charging ? " (Charging ⚡)" : "";
+                        batteryEl.innerText = level + charging;
+                    }).catch(function() {
+                        batteryEl.innerText = "Not Available";
+                    });
+                } else {
+                    batteryEl.innerText = "Not Supported";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
