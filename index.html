@@ -524,6 +524,12 @@
                             <button onclick="window.open('https://play.google.com/store/apps/details?id=com.dts.freefiremax', '_blank')" style="background: #ff5500; color: #fff; border: none; padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer;">FF MAX</button>
                         </div>
 
+                        <!-- Shizuka Section Added -->
+                        <div class="card" style="border-left-color: #00ffff; background: #151515;">
+                            <span style="color: #00ffff; font-weight: bold; font-size: 10px;">Shizuka 🚀</span>
+                            <button onclick="window.open('https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api', '_blank')" style="background: #00ffff; color: #000; border: none; padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer;">DOWNLOAD</button>
+                        </div>
+
                         <button class="btn-go" onclick="alert('সফলভাবে সমস্ত প্রিমিয়াম সেন্সি বুস্ট ও এফএফপিএস লাইভ মোড সক্রিয় করা হয়েছে!')">ACTIVATE ALL BOOST</button>
                     </div>
                 </div>
@@ -539,23 +545,19 @@
         let timeLeft = 600; // ১০ মিনিট (৬০০ সেকেন্ড)
         let timerInterval;
 
-        // Function to generate new password
         function generateNewPassword() {
             let randomNum = Math.floor(100000 + Math.random() * 900000);
             currentDynamicPass = "TURJO999" + randomNum;
         }
 
-        // Generate initial password
         generateNewPassword();
 
-        // Automatically reset and update password every 10 minutes (600,000 milliseconds)
         setInterval(() => {
             generateNewPassword();
-            timeLeft = 600; // Reset timer back to 10 minutes
+            timeLeft = 600; 
             let timerSpan = document.getElementById('timeLeft');
             if(timerSpan) timerSpan.innerText = timeLeft;
             
-            // Restart countdown interval
             clearInterval(timerInterval);
             startTimer();
         }, 600000);
